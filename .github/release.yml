@@ -1,34 +1,45 @@
-# .github/release.yml
+name: Release # Workflow name displayed on GitHub 
 
-changelog:
-  exclude:
-    labels:
-      - ignore-for-release
-    authors:
-      - octocat
-  categories:
-    - title: Breaking Changes 🛠
-      labels:
-        - Semver-Major
-        - breaking-change
-    - title: Exciting New Features 🎉
-      labels:
-        - Semver-Minor
-        - enhancement
-    - title: Other Changes
-      labels:
-        - "*"
+on: 
 
-# .github/release.yml
+  workflow_dispatch: # Trigger manually 
 
-changelog:
-  categories:
-    - title: 🏕 Features
-      labels:
-        - '*'
-      exclude:
-        labels:
-          - dependencies
-    - title: 👒 Dependencies
-      labels:
-        - dependencies
+   branches: main # Branch on which the workflow will run 
+
+jobs: 
+
+   new-release: 
+
+      runs-on: ubuntu-latest 
+
+      steps: 
+
+         - uses: actions/checkout@v3 # Checkout our working repository 
+
+         - name: Conventional Changelog Action
+
+             id: changelog 
+
+             uses: TriPSs/conventional-changelog-action@v3 
+
+             with: 
+
+                 github-token: ${{ secrets.github_token } 
+
+                 output-file: "false" 
+
+        - name: Create Release # This action will create the actual release 
+
+             uses: actions/create-release@v1 
+
+             if: ${{ steps.changelog.outputs.skipped == 'false' } 
+
+             env: 
+
+                GITHUB_TOKEN: ${{ secrets.github_token } 
+
+                with: tag_name: ${{ steps.changelog.outputs.tag } 
+
+                release_name: ${{ steps.changelog.outputs.tag } 
+
+                body: ${{ steps.changelog.outputs.clean_changelog }
